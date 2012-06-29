@@ -1,0 +1,39 @@
+This is Perl module Data::Validator::Manager.
+
+INSTALLATION
+
+Type the following command:
+
+    $ curl -L http://cpanmin.us | perl - Data::Validator::Manager
+
+Or install cpanm and then run the following command to install
+Data::Validator::Manager:
+
+    $ cpanm Data::Validator::Manager
+
+If you get an archive of this distribution, unpack it and build it
+as per the usual:
+
+    $ tar xzf Data-Validator-Manager-$version.tar.gz
+    $ cd Data-Validator-Manager-$version
+    $ perl Makefile.PL
+    $ make && make test
+
+Then install it:
+
+    $ make install
+
+DOCUMENTATION
+
+Data::Validator::Manager documentation is available as in POD. So you can do:
+
+    $ perldoc Data::Validator::Manager
+
+to read the documentation online with your favorite pager.
+
+LICENSE AND COPYRIGHT
+
+Copyright (c) 2012, <<YOUR NAME HERE>>. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
