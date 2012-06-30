@@ -1,65 +1,20 @@
 package Data::Validator::Manager::Declare;
 use 5.008_001;
-use Mouse;
-use Mouse::Exporter;
-use MouseX::StrictConstructor;
-use Mouse::Util ();
+use strict;
+use warnings;
+use utf8;
+
+use parent qw/Exporter/;
 
 our $VERSION = '0.01';
 
 use Carp ();
 use Data::Validator::Manager;
-use namespace::clean ();
 
-Mouse::Exporter->setup_import_methods(
-    as_is   => [qw/rule/],
-    also    => 'Mouse',
-);
+# export functions
+our @EXPORT = qw/rule with/;
 
-no Mouse;
-
-{
-    my $import = do {
-        my $super = __PACKAGE__->can('import');
-        sub {
-            my $class  = shift;
-            my $caller = caller;
-
-            $class->$super(+{ into => $caller } => @_);
-
-            ## define methods
-            my $manager = Data::Validator::Manager->new;
-            my %methods = (
-                manager  => sub { $manager },
-                get_rule => sub {
-                    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-                    shift->manager->get_rule(@_)
-                },
-                validate => sub {
-                    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-                    shift->manager->validate(@_)
-                },
-            );
-
-            ## for Singleton
-            my $instance;
-            $methods{instance} = sub { $instance ||= shift->new };
-
-            ## export methods
-            Mouse::Util::install_subroutines($caller, %methods);
-
-            ## import
-            MouseX::StrictConstructor->import;
-            namespace::clean->import(
-                -cleanee => $caller,
-                -except  => [qw/meta/, keys %methods],
-            );
-        }
-    };
-    Mouse::Util::install_subroutines(__PACKAGE__, import => $import);
-};
-
-sub rule {
+sub rule ($$;@) {## no critic
     my $name = shift;
     my $rule = shift;
 
@@ -69,10 +24,63 @@ sub rule {
     my $dv = $manager->add_rule($name => $rule);
     $dv->with(@_) if @_;
 
-    return;
+    return $dv;
 }
 
-__PACKAGE__->meta->make_immutable();
+sub with (@) {## no critic
+    return @_
+}
+
+sub import {
+    my $class  = shift;
+    my $caller = caller;
+
+    ## export methods
+    my %export_methods = $class->export_methods;
+    foreach my $name (keys %export_methods) {
+        my $code = $export_methods{$name};
+        {
+            no strict 'refs';
+            *{"${caller}::${name}"} = $code;
+        }
+    }
+
+    $class->export_to_level(1, @_);
+}
+
+sub export_methods {
+    my $manager = Data::Validator::Manager->new;
+    return (
+        import   => sub {
+            my $class  = shift;
+            my $caller = caller;
+
+            while (my $export = shift) {
+                unless ($class->can($export)) {
+                    Carp::croak qq{Can't export "${export}" via package "${class}"};
+                }
+
+                my $code = sub {
+                    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+                    $class->$export(@_);
+                };
+
+                no strict 'refs';
+                *{"${caller}::${export}"} = $code;
+            }
+        },
+        manager  => sub { $manager },
+        get_rule => sub {
+            local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+            shift->manager->get_rule(@_)
+        },
+        validate => sub {
+            local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+            shift->manager->validate(@_)
+        },
+    );
+}
+
 __END__
 
 =head1 NAME
