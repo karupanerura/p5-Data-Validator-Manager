@@ -4,79 +4,81 @@ use strict;
 use warnings;
 use utf8;
 
-use parent qw/Exporter/;
-
 our $VERSION = '0.01';
 
+use Exporter ();
 use Carp ();
 use Data::Validator::Manager;
-
-# export functions
-our @EXPORT = qw/rule with/;
-
-sub rule ($$;@) {## no critic
-    my $name = shift;
-    my $rule = shift;
-
-    my $manager = caller->manager;
-
-    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-    my $dv = $manager->add_rule($name => $rule);
-    $dv->with(@_) if @_;
-
-    return $dv;
-}
-
-sub with (@) {## no critic
-    return @_
-}
+use namespace::clean ();
 
 sub import {
     my $class  = shift;
     my $caller = caller;
 
-    ## export methods
-    my %export_methods = $class->export_methods;
-    foreach my $name (keys %export_methods) {
-        my $code = $export_methods{$name};
+    ## export sugers
+    my %export_sugers = $class->export_sugers;
+    foreach my $name (keys %export_sugers) {
+        my $code = $export_sugers{$name};
         {
             no strict 'refs';
             *{"${caller}::${name}"} = $code;
         }
     }
 
-    $class->export_to_level(1, @_);
+    ## export functions
+    my %export_functions = $class->export_functions;
+    foreach my $name (keys %export_functions) {
+        my $code = $export_functions{$name};
+        {
+            no strict 'refs';
+            *{"${caller}::${name}"} = $code;
+        }
+    }
+
+    ## setup Exporter
+    {
+        no strict 'refs';
+        unshift @{"${caller}::ISA"}       => 'Exporter';
+        unshift @{"${caller}::EXPORT_OK"} => keys %export_functions;
+    }
+
+    namespace::clean->import(
+        -cleanee => $caller,
+        -except  => [keys %export_functions],
+    );
 }
 
-sub export_methods {
+sub export_sugers {
+    return (
+        rule => sub ($$;@) {## no critic
+            my $name = shift;
+            my $rule = shift;
+
+            my $manager = caller->manager;
+
+            local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+            my $dv = $manager->add_rule($name => $rule);
+            $dv->with(@_) if @_;
+
+            return $dv;
+        },
+        with => sub (@) {## no critic
+            return @_
+        }
+    );
+}
+
+sub export_functions {
     my $manager = Data::Validator::Manager->new;
     return (
-        import   => sub {
-            my $class  = shift;
-            my $caller = caller;
-
-            while (my $export = shift) {
-                unless ($class->can($export)) {
-                    Carp::croak qq{Can't export "${export}" via package "${class}"};
-                }
-
-                my $code = sub {
-                    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-                    $class->$export(@_);
-                };
-
-                no strict 'refs';
-                *{"${caller}::${export}"} = $code;
-            }
-        },
         manager  => sub { $manager },
         get_rule => sub {
             local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-            shift->manager->get_rule(@_)
+            $manager->get_rule(@_)
         },
         validate => sub {
             local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-            shift->manager->validate(@_)
+            $manager->validate(@_)
         },
     );
 }
