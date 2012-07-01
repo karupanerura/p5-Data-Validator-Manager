@@ -1,4 +1,4 @@
-package Data::Validator::Manager;
+B0;95;cpackage Data::Validator::Manager;
 use 5.008_001;
 use Mouse;
 use MouseX::StrictConstructor;
@@ -84,7 +84,7 @@ __END__
 
 =head1 NAME
 
-Data::Validator::Manager - Perl extention to do something
+Data::Validator::Manager - instance manager for Data::Validator
 
 =head1 VERSION
 
@@ -96,12 +96,10 @@ This document describes Data::Validator::Manager version 0.01.
 
     my $v = Data::Validator::Manager->new;
 
-    $v->add_rule(
-        hoge => +{
-            foo => 'Str',
-            bar => +{ isa => 'Str', default => 'baz' },
-        }
-    )->with(qw/Method/);
+    $v->add_rule(hoge => +{
+        foo => 'Str',
+        bar => +{ isa => 'Str', default => 'baz' },
+    })->with(qw/Method/);
 
     sub hoge {
         my($self, $args) = $v->validate(hoge => @_);
@@ -111,15 +109,60 @@ This document describes Data::Validator::Manager version 0.01.
 
 =head1 DESCRIPTION
 
-# TODO
+This module is instance manager for Data::Validator.
+This can be used to standardize as name the validation rules.
 
 =head1 INTERFACE
 
-=head2 Functions
+=head2 Methods
 
-=head3 C<< hello() >>
+=head3 C<< new() >>
 
-# TODO
+create instance of this class.
+
+  my $v = Data::Validator::Manager->new;
+
+=head3 C<< add_rule(Str, HashRef) >>
+
+add validation rule. this method return object of Data::Validator.
+
+  $v->add_rule(rule_name => +{
+      arg1 => 'Str',
+      arg2 => 'Int'
+  });
+
+call with method, if you add Role of Data::Validator.
+
+  $v->add_rule(rule_name => +{
+      arg1 => 'Str',
+      arg2 => 'Int'
+  })->with(qw/StrictSequenced/);
+
+=head3 C<< get_rule(Str) >>
+
+get validation rule. this method return object of Data::Validator.
+
+  my $rule  = $v->get_rule('no_throw_rule');
+  my($args) = $rule->validate(@_);
+
+  if ($rule->has_errors) {
+      my $errors = $v->clear_errors;
+      foreach my $e(@{$errors}) {
+          print $e->{message}, "\n";
+      }
+  }
+
+=head3 C<< clear_rule(Str) >>
+
+clear validation rule. this method return object of Data::Validator.
+
+  $v->clear_rule('temporary_rule');
+
+=head3 C<< validate(Str, Array) >>
+
+execute validation.
+
+  my $args = $v->validate(rule_name => @_);
 
 =head1 DEPENDENCIES
 
@@ -133,15 +176,15 @@ to cpan-RT.
 
 =head1 SEE ALSO
 
-L<perl>
+L<Data::Validator>
 
 =head1 AUTHOR
 
-<<YOUR NAME HERE>> E<lt><<YOUR EMAIL ADDRESS HERE>>E<gt>
+Kenta Sato E<lt>karupa@cpan.orgE<gt>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2012, <<YOUR NAME HERE>>. All rights reserved.
+Copyright (c) 2012, Kenta Sato. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

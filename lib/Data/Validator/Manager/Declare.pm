@@ -87,7 +87,7 @@ __END__
 
 =head1 NAME
 
-Data::Validator::Manager::Declare - Perl extention to do something
+Data::Validator::Manager::Declare - provides syntactic sugars for Data::Validator::Manager.
 
 =head1 VERSION
 
@@ -114,25 +114,71 @@ This document describes Data::Validator::Manager::Declare version 0.01.
     use warnings;
     use utf8;
 
-    use Proj::Validator;
+    use Proj::Validator qw/validate/;
 
     sub hoge {
-        my($self, $args) = Proj::Validator->instance->validate(hoge => @_);
+        my($self, $args) = validate(hoge => @_);
     }
 
     1;
 
 =head1 DESCRIPTION
 
-# TODO
+This module provides syntactic sugars for L<Data::Validator::Manager>.
+You can make the declaration of the validation rules by syntactic sugar.
 
 =head1 INTERFACE
 
-=head2 Functions
+=head2 Syntactic Sugars
 
-=head3 C<< hello() >>
+=head3 C<< rule(Str, HashRef, Array) >>
 
-# TODO
+add validation rule.
+
+  rule 'rule_name' => +{
+      arg1 => 'Str',
+      arg2 => 'Int'
+  };
+
+=head3 C<< with(Array) >>
+
+add Role of Data::Validator.
+
+This is syntactic sugar for arranging the appearance.
+This does not actually do anything.
+
+  rule 'rule_name' => +{
+      arg1 => 'Str',
+      arg2 => 'Int'
+  } => with(qw/Method/);
+
+=head2 Export functions
+
+=head3 C<< get_rule(Str) >>
+
+get validation rule. this function return object of Data::Validator.
+
+  my $rule  = get_rule('no_throw_rule');
+  my($args) = $rule->validate(@_);
+
+  if ($rule->has_errors) {
+      my $errors = $v->clear_errors;
+      foreach my $e(@{$errors}) {
+          print $e->{message}, "\n";
+      }
+  }
+
+=head3 C<< validate(Str, Array) >>
+
+execute validation.
+
+  my $args = validate(rule_name => @_);
+
+=head3 C<< manager() >>
+
+get L<Data::Validator::Manager> instance.
+
+  my $v = manager();
 
 =head1 DEPENDENCIES
 
@@ -146,15 +192,16 @@ to cpan-RT.
 
 =head1 SEE ALSO
 
-L<perl>
+L<Data::Validator>
+L<Data::Validator::Manager>
 
 =head1 AUTHOR
 
-<<YOUR NAME HERE>> E<lt><<YOUR EMAIL ADDRESS HERE>>E<gt>
+Kenta Sato E<lt>karupa@cpan.orgE<gt>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2012, <<YOUR NAME HERE>>. All rights reserved.
+Copyright (c) 2012, Kenta Sato. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
