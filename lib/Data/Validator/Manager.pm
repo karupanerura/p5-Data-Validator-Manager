@@ -1,4 +1,4 @@
-B0;95;cpackage Data::Validator::Manager;
+package Data::Validator::Manager;
 use 5.008_001;
 use Mouse;
 use MouseX::StrictConstructor;
