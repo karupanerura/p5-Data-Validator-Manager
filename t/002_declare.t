@@ -28,18 +28,34 @@ subtest 'get_rule' => sub {
 };
 
 subtest 'validate' => sub {
-    my $code = sub {
-        validate(hoge => @_);
+    subtest 'rule: hoge' => sub {
+        my $code = sub {
+            validate(hoge => @_);
+        };
+
+        dies_ok {
+            $code->();
+        } 'validate error';
+
+        lives_and {
+            is_deeply $code->(foo => 'sss'),               +{ foo => 'sss', bar => 'baz' }, 'returns ok';
+            is_deeply $code->(foo => 'sss', bar => 'xxx'), +{ foo => 'sss', bar => 'xxx' }, 'returns ok';
+        } 'validate success';
     };
+    subtest 'rule: fuga' => sub {
+        my $code = sub {
+            validate(fuga => @_);
+        };
 
-    dies_ok {
-        $code->();
-    } 'validate error';
+        dies_ok {
+            $code->(foo => 'sss');
+        } 'validate error';
 
-    lives_and {
-        is_deeply $code->(foo => 'sss'),               +{ foo => 'sss', bar => 'baz' }, 'returns ok';
-        is_deeply $code->(foo => 'sss', bar => 'xxx'), +{ foo => 'sss', bar => 'xxx' }, 'returns ok';
-    } 'validate success';
+        lives_and {
+            is_deeply [__PACKAGE__->$code(foo => 'sss')              ], [__PACKAGE__, +{ foo => 'sss', bar => 'baz' }], 'returns ok';
+            is_deeply [__PACKAGE__->$code(foo => 'sss', bar => 'xxx')], [__PACKAGE__, +{ foo => 'sss', bar => 'xxx' }], 'returns ok';
+        } 'validate success';
+    };
 };
 
 subtest 'namespace::clean' => sub {
