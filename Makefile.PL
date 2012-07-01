@@ -26,13 +26,14 @@ use inc::Module::Install;
 
 all_from 'lib/Data/Validator/Manager.pm';
 
-
-requires 'Any::Moose'                => 0.13;
-requires 'Mouse'                     => 0.70;
-requires 'MouseX::StrictConstructor' => 0.02;
-requires 'MouseX::NativeTraits'      => 0.02;
-test_requires 'Test::More'     => '0.88';
-test_requires 'Test::Requires' => '0.06';
+requires 'Carp';
+requires 'Exporter';
+requires 'Mouse'                     => '0.70';
+requires 'MouseX::StrictConstructor' => '0.02';
+requires 'Data::Validator'           => '0.09';
+requires 'namespace::clean'          => '0.11';
+test_requires 'Test::More'           => '0.88';
+test_requires 'Test::Exception'      => '0.06';
 
 auto_set_repository;
 
